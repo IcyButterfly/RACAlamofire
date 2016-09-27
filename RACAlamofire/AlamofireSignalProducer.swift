@@ -11,10 +11,10 @@ import Alamofire
 import ReactiveCocoa
 
 
-extension Request{
+public extension Request{
     
     // MARK: SignalProducer
-    func rac_response() -> SignalProducer<(NSURLRequest?, NSHTTPURLResponse?, NSData?), NSError> {
+    public func rac_response() -> SignalProducer<(NSURLRequest?, NSHTTPURLResponse?, NSData?), NSError> {
         
         return SignalProducer.init({ (observer, disponse) in
             
@@ -30,7 +30,7 @@ extension Request{
         })
     }
     
-    func rac_response<T: ResponseSerializerType>(
+    public func rac_response<T: ResponseSerializerType>(
         queue queue: dispatch_queue_t? = nil,
               responseSerializer: T)
         -> SignalProducer<T.SerializedObject, T.ErrorObject>{
@@ -50,49 +50,25 @@ extension Request{
             })
     }
     
-    func rac_responseData(queue queue: dispatch_queue_t? = nil) -> SignalProducer<NSData, NSError> {
+    public func rac_responseData(queue queue: dispatch_queue_t? = nil) -> SignalProducer<NSData, NSError> {
         
         return self.rac_response(queue: queue, responseSerializer: Request.dataResponseSerializer())
     }
     
     
-    func rac_responseString(queue queue: dispatch_queue_t? = nil, encoding: NSStringEncoding? = nil)
+    public func rac_responseString(queue queue: dispatch_queue_t? = nil, encoding: NSStringEncoding? = nil)
         -> SignalProducer<String, NSError>{
             
             return self.rac_response(queue: queue, responseSerializer: Request.stringResponseSerializer(encoding: encoding))
     }
     
-    func rac_responseJSON(queue queue: dispatch_queue_t? = nil, options: NSJSONReadingOptions = .AllowFragments)
+    public func rac_responseJSON(queue queue: dispatch_queue_t? = nil, options: NSJSONReadingOptions = .AllowFragments)
         -> SignalProducer<AnyObject, NSError> {
             
             return self.rac_response(queue: queue, responseSerializer: Request.JSONResponseSerializer(options: options))
     }
     
-    // MARK: Signal
-    func rac_requestJSON() -> Signal<AnyObject, NSError>{
-        
-        return  Signal.init { (observer) -> Disposable? in
-            
-            self.responseJSON(queue: nil, options: .AllowFragments, completionHandler: { (response) in
-                #if DEBUG
-                print("request json send")
-                #endif
-                
-                switch response.result{
-                case .Success(let value):
-                    observer.sendNext(value)
-                    observer.sendCompleted()
-                case .Failure(let err):
-                    observer.sendFailed(err)
-                }
-            })
-            
-            return nil
-        }
-    }
-    
-    
-    func rac_upload(URLString : String,
+    public func rac_upload(URLString : String,
                     parameters:[String : AnyObject]? = nil,
                     header: [String: String]? = nil,
                     image: UIImage ,
