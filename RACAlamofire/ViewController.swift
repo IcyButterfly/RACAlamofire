@@ -16,6 +16,8 @@ struct Server {
 
 extension Request{
     
+    
+    // MARK: - Convert to SignalProducer
     func rac_response() -> SignalProducer<(NSURLRequest?, NSHTTPURLResponse?, NSData?), NSError> {
         
         return SignalProducer.init({ (observer, disponse) in
@@ -55,6 +57,8 @@ extension Request{
         })
     }
     
+    
+    // MARK: - response Type
     func rac_responseData(queue queue: dispatch_queue_t? = nil) -> SignalProducer<NSData, NSError> {
         
         return self.rac_response(queue: queue, responseSerializer: Request.dataResponseSerializer())
@@ -77,26 +81,6 @@ extension Request{
         return self.rac_response(queue: queue, responseSerializer: Request.JSONResponseSerializer(options: options))
     }
     
-    func rac_requestJSON() -> Signal<AnyObject, NSError>{
-        return  Signal.init { (observer) -> Disposable? in
-            
-            
-            self.responseJSON(queue: nil, options: .AllowFragments, completionHandler: { (response) in
-                
-                print("request json send")
-                switch response.result{
-                case .Success(let value):
-                    observer.sendNext(value)
-                    observer.sendCompleted()
-                case .Failure(let err):
-                    observer.sendFailed(err)
-                }
-            
-            })
-            
-            return nil
-        }
-    }
 }
 
 
@@ -126,27 +110,15 @@ class ViewController: UIViewController {
 //            self.signalProducer()
 //        }
         
+        
+        
         let action = Action<UIButton, AnyObject, NSError> { value -> SignalProducer<AnyObject, NSError> in
             
             print("btn actioned")
-            let ss = self.producer.on(started: {
-                    print("producer.on start")
-                }, event: { (event) in
-                    print(event)
-                }, failed: { (err) in
-                    print(err)
-                }, completed: { 
-                    print("producer.on completed")
-                }, interrupted: { 
-                    print("producer.on interrupted")
-                }, terminated: { 
-                    print("producer.on terminnated")
-                }, disposed: { 
-                    print("producer.on dispose")
-                }, next: { (next) in
-                    print("producer.on nextValue: ")
-            })
-//            return self.producer
+            
+            let ss = Alamofire.request(.GET, "https://httpbin.org/get", parameters: ["foo": "bar"])
+                .rac_responseJSON().replayLazily(1).logEvents()
+
             
             return ss
         }
@@ -154,7 +126,7 @@ class ViewController: UIViewController {
         cocoaAction = CocoaAction(action, input: self.button)
         self.button.addTarget(cocoaAction, action: CocoaAction.selector, forControlEvents: .TouchUpInside)
         
-        action.events.observe { (ob) in
+        action.events.logEvents().observe { (ob) in
             switch ob{
             case .Next(let value):
                 print("event next \("event")")
@@ -177,6 +149,7 @@ class ViewController: UIViewController {
         producer.startWithSignal({ (signal, dispose) in
             
             _signal = signal
+            
             
         })
         
@@ -205,17 +178,15 @@ class ViewController: UIViewController {
     func signal(){
         
         let signal = Alamofire.request(.GET, "https://httpbin.org/get", parameters: ["foo": "bar"])
-            .rac_requestJSON()
+            .rac_responseJSON()
         
-     
-        
-        signal.observeNext { (ob) in
-            print("signal next1:")
+        signal.startWithSignal { (signal, dispose) in
+            
+            signal.observeNext({ (_) in
+                
+            })
         }
         
-        signal.observeNext { (ob) in
-            print("signal next2")
-        }
         
     }
 }
