@@ -2,6 +2,10 @@
 <Workspace
    version = "1.0">
    <FileRef
+<<<<<<< HEAD
       location = "self:RACAlamofire.xcodeproj">
+=======
+      location = "self:">
+>>>>>>> 5315de22fc6b2e76a345d28f34e10619db4dfbab
    </FileRef>
 </Workspace>
